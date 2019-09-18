@@ -1,16 +1,16 @@
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', 'react'], factory);
+    define(['exports', 'react', 'prop-types'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('react'));
+    factory(exports, require('react'), require('prop-types'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.react);
+    factory(mod.exports, global.react, global.propTypes);
     global.index = mod.exports;
   }
-})(this, function (exports, _react) {
+})(this, function (exports, _react, _propTypes) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -18,6 +18,8 @@
   });
 
   var _react2 = _interopRequireDefault(_react);
+
+  var _propTypes2 = _interopRequireDefault(_propTypes);
 
   function _interopRequireDefault(obj) {
     return obj && obj.__esModule ? obj : {
@@ -38,6 +40,18 @@
 
     return target;
   };
+
+  function _objectWithoutProperties(obj, keys) {
+    var target = {};
+
+    for (var i in obj) {
+      if (keys.indexOf(i) >= 0) continue;
+      if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+      target[i] = obj[i];
+    }
+
+    return target;
+  }
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -87,14 +101,14 @@
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  exports.default = function (ComposedComponent) {
-    var windowSize = function (_Component) {
-      _inherits(windowSize, _Component);
+  function windowSize(Component) {
+    var WindowSize = function (_React$Component) {
+      _inherits(WindowSize, _React$Component);
 
-      function windowSize() {
-        _classCallCheck(this, windowSize);
+      function WindowSize() {
+        _classCallCheck(this, WindowSize);
 
-        var _this = _possibleConstructorReturn(this, (windowSize.__proto__ || Object.getPrototypeOf(windowSize)).call(this));
+        var _this = _possibleConstructorReturn(this, (WindowSize.__proto__ || Object.getPrototypeOf(WindowSize)).call(this));
 
         _this.state = {
           width: document.body.clientWidth,
@@ -103,7 +117,7 @@
         return _this;
       }
 
-      _createClass(windowSize, [{
+      _createClass(WindowSize, [{
         key: 'handleResize',
         value: function handleResize() {
           // set initial state
@@ -118,41 +132,53 @@
           // bind window resize listeners
           this._handleResize = this.handleResize.bind(this);
           window.addEventListener('resize', this._handleResize);
-          setTimeout(this._handleResize, 1000);
+          this._handleResizeTimeout = setTimeout(this._handleResize, 1000);
         }
       }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
           // clean up listeners
           window.removeEventListener('resize', this._handleResize);
-        }
-      }, {
-        key: 'getWrappedInstance',
-        value: function getWrappedInstance() {
-          return this.wrappedInstance;
+          if (this._handleResizeTimeout) {
+            clearTimeout(this._handleResizeTimeout);
+          }
         }
       }, {
         key: 'render',
         value: function render() {
-          var _this2 = this;
+          var _props = this.props,
+              forwardRef = _props.forwardRef,
+              rest = _objectWithoutProperties(_props, ['forwardRef']);
 
           // pass window dimensions as props to wrapped component
-          return _react2.default.createElement(ComposedComponent, _extends({}, this.props, {
-            ref: function ref(c) {
-              _this2.wrappedInstance = c;
-            },
+          return _react2.default.createElement(Component, _extends({}, rest, {
+            ref: forwardRef,
             windowWidth: this.state.width,
             windowHeight: this.state.height
           }));
         }
       }]);
 
-      return windowSize;
-    }(_react.Component);
+      return WindowSize;
+    }(_react2.default.Component);
 
-    var composedComponentName = ComposedComponent.displayName || ComposedComponent.name || 'Component';
+    WindowSize.propTypes = {
+      forwardRef: _propTypes2.default.element
+    };
 
-    windowSize.displayName = 'windowSize(' + composedComponentName + ')';
-    return windowSize;
+    function forwardRef(props, ref) {
+      return _react2.default.createElement(WindowSize, _extends({}, props, { forwardRef: ref }));
+    }
+
+    var name = Component.displayName || Component.name || 'Component';
+    forwardRef.displayName = 'windowSize(' + name + ')';
+
+    return _react2.default.forwardRef(forwardRef);
+  }
+
+  windowSize.propTypes = {
+    Component: _propTypes2.default.element
   };
+
+  exports.default = windowSize;
 });
